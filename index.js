@@ -1,31 +1,51 @@
-let product = document.getElementById('product');
+let products = document.querySelectorAll('.product');
+let trolley = document.querySelector('.img__trolley');
 
-product.onmousedown = function(e) { // 1. отследить нажатие
+products.forEach((product) => {
+  product.onmousedown = function(event) {
+    let shiftX = event.clientX - product.getBoundingClientRect().left;
+    let shiftY = event.clientY - product.getBoundingClientRect().top;
 
-  // подготовить к перемещению
-  // 2. разместить на том же месте, но в абсолютных координатах
-  product.style.position = 'absolute';
-  moveAt(e);
-  // переместим в body, чтобы мяч был точно не внутри position:relative
-  document.body.appendChild(product);
+    product.style.position = 'absolute';
+    document.body.append(product);
 
-  product.style.zIndex = 1; // показывать мяч над другими элементами
+    moveAt(event.pageX, event.pageY);
 
-  // передвинуть мяч под координаты курсора
-  // и сдвинуть на половину ширины/высоты для центрирования
-  function moveAt(e) {
-    product.style.left = e.pageX - product.offsetWidth / 2 + 'px';
-    product.style.top = e.pageY - product.offsetHeight / 2 + 'px';
+    function moveAt(pageX, pageY) {
+      product.style.left = pageX - shiftX + 'px';
+      product.style.top = pageY - shiftY + 'px';
+    }
+
+    function onMouseMove(event) {
+      moveAt(event.pageX, event.pageY);
+    }
+
+    document.addEventListener('mousemove', onMouseMove);
+
+    product.onmouseup = function() {
+      document.removeEventListener('mousemove', onMouseMove);
+      product.onmouseup = null;
+    };
+  };
+
+  let productRect = product.getBoundingClientRect();
+  let trolleyRect = trolley.getBoundingClientRect();
+
+  if (
+    productRect.right > productRect.left &&
+    productRect.left > productRect.right &&
+    productRect.bottom > trolleyRect.top &&
+    productRect.top < trolleyRect.bottom   
+  ){
+    product.style.position = 'absolute';
+    product.style.left = trolleyRect.left + 10 + 'px';
+    product.style.top = trolleyRect.top + 10 + 'px'; 
+    trolley.appendChild(product);
   }
 
-  // 3, перемещать по экрану
-  document.onmousemove = function(e) {
-    moveAt(e);
-  }
 
-  // 4. отследить окончание переноса
-  product.onmouseup = function() {
-    document.onmousemove = null;
-    product.onmouseup = null;
-  }
-}
+  product.ondragstart = function() {
+    return false;
+  };
+});
+
